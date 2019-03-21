@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Linq;
+using System.Reflection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
@@ -17,6 +18,8 @@ namespace WebApiTest.Test.Infrastructure
         {
             var path = FindAppSettings(PlatformServices.Default.Application.ApplicationBasePath);
             var builder = new WebHostBuilder()
+                    .UseEnvironment("Tests")
+                    .UseContentRoot(path)
                 .ConfigureAppConfiguration(cfg =>
                     cfg.SetBasePath(path)
                         .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
@@ -24,9 +27,12 @@ namespace WebApiTest.Test.Infrastructure
                         .AddEnvironmentVariables()
                 )
                 .ConfigureLogging(b => b.AddConsole().AddDebug())
-                .UseEnvironment("Tests")
-                .UseContentRoot(path)
-                .UseStartup<TestStartup>(); //will fail the test
+
+
+                .UseStartup<TestStartup>()
+                .UseSetting(WebHostDefaults.ApplicationKey, typeof(Program).GetTypeInfo().Assembly.FullName)
+
+                ;
 
 
             //.UseStartup<Startup>(); //the test passes with this line
